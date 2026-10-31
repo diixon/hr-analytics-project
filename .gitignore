@@ -1,0 +1,19 @@
+# SQLite database (re-created by notebooks/02_create_database.ipynb)
+*.db
+*.sqlite
+*.sqlite3
+
+# Jupyter / Python temporary files
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.vscode/
