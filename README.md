@@ -52,7 +52,7 @@ hr-analytics-project/
 - [x] Data cleaning (Python)
 - [x] SQLite database with primary and foreign keys
 - [x] Basic SQL queries
-- [ ] Advanced SQL queries (CTEs, window functions)
+- [x] Advanced SQL queries (CTEs, window functions)
 - [ ] Exploratory analysis and charts (Python)
 - [ ] Excel PivotTables
 - [ ] Power BI dashboard
