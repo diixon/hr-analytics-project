@@ -13,7 +13,7 @@ An end-to-end analysis of HR data for a company with 1,470 employees. The goal i
 5. Are satisfaction, work-life balance, and training related to performance?
 
 ## Dataset
-Five CSV files (source: **TODO: add the source of the data**):
+Five CSV files (a practice dataset shared for skill-building; the original source is not documented):
 
 | File | Description | Rows |
 |---|---|---|
