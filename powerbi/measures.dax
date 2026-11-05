@@ -1,11 +1,47 @@
-// HR Analytics project - Power BI measures and calculated columns
-// Tables imported from data/clean: Employee (employee_clean), Performance (performance_clean),
-// EducationLevel, RatingLevel, SatisfiedLevel.
-// Relationships: Employee[EmployeeID] (1) -> Performance[EmployeeID] (*)
-//                EducationLevel[EducationLevelID] (1) -> Employee[Education] (*)
+// =============================================================================
+//  HR ANALYTICS - DAX MEASURES AND CALCULATED COLUMNS
+//  Report: HR_Attrition_Dashboard.pbix
+// =============================================================================
+//
+//  ABOUT THIS FILE
+//  This file lists all the DAX formulas used in the Power BI dashboard:
+//  2 calculated columns and 18 measures. Next to each formula there is a short
+//  note with the question it answers and how it works.
+//
+//  The same results were also calculated with SQL, Python, and Excel.
+//  All four tools give the same numbers.
+//
+// -----------------------------------------------------------------------------
+//  DATA MODEL
+// -----------------------------------------------------------------------------
+//  Tables (loaded from data/clean):
+//      Employee         1,470 rows    one row for each employee
+//      Performance      6,709 rows    one row for each performance review
+//      EducationLevel   5 rows        names of the education levels
+//
+//  Names and ethnicity were removed from the Employee table in Power Query,
+//  because they are not needed for the analysis.
+//
+//  Relationships (one-to-many, single direction):
+//      Employee[EmployeeID]              (one)  ->  Performance[EmployeeID]  (many)
+//      EducationLevel[EducationLevelID]  (one)  ->  Employee[Education]      (many)
+//
+//  Because of the first relationship, a slicer on an Employee column
+//  (for example Department) also filters the reviews.
+//
+//  Two simple terms:
+//      Calculated column = a new column. Its value is calculated once for each row.
+//      Measure           = a calculation that changes when the user clicks a
+//                          slicer or when it is used in a different chart.
 
-// ---------- Calculated columns (Table view > Employee > New column) ----------
 
+// =============================================================================
+//  1. CALCULATED COLUMNS (in the Employee table)
+// =============================================================================
+
+// Puts each employee in an age group, so we can compare attrition by age.
+// SWITCH checks the conditions from top to bottom and returns the result of
+// the first one that is true. It is easier to read than many nested IFs.
 Age Group =
 SWITCH (
     TRUE (),
@@ -15,34 +51,77 @@ SWITCH (
     "46-55"
 )
 
+// Splits employees into new (0-2 years) and longer-serving (3+ years).
+// We use it for the high-risk group, because many employees leave in the
+// first two years.
 Tenure Band =
 IF ( Employee[YearsAtCompany] <= 2, "0-2 years", "3+ years" )
 
-// ---------- Measures (create them in a table called "Measures") ----------
 
+// =============================================================================
+//  2. MAIN KPIs
+// =============================================================================
+
+// How many employees are in the current selection?
+// COUNTROWS counts the rows that are left after the slicers and filters.
 Total Employees = COUNTROWS ( Employee )
 
+// How many of them left the company?
+// CALCULATE counts the rows again, but only where Attrition = "Yes".
 Employees Left =
 CALCULATE ( COUNTROWS ( Employee ), Employee[Attrition] = "Yes" )
 
+// What share of employees left?
+// DIVIDE is safer than "/". It shows a blank value instead of an error
+// when the number below is zero.
 Attrition Rate = DIVIDE ( [Employees Left], [Total Employees] )
 
+
+// =============================================================================
+//  3. SALARY
+// =============================================================================
+
+// A few very high salaries make the average high. The median (the middle
+// value) shows a typical salary better.
 Median Salary = MEDIAN ( Employee[Salary] )
 
+// Shown next to the median, so we can see the difference between them.
 Average Salary = AVERAGE ( Employee[Salary] )
 
+
+// =============================================================================
+//  4. OVERTIME
+// =============================================================================
+
+// What is the attrition rate for employees who work overtime, and for those
+// who do not?
+// A filter on a column inside CALCULATE replaces the slicer on that same column.
+// So these two measures ignore the OverTime slicer. This is on purpose: one
+// chart can show both values together.
 Overtime Attrition Rate =
 CALCULATE ( [Attrition Rate], Employee[OverTime] = "Yes" )
 
 No Overtime Attrition Rate =
 CALCULATE ( [Attrition Rate], Employee[OverTime] = "No" )
 
-// Difference in percentage points (example: 0.201 = 20.1 points)
+// How much higher is attrition with overtime?
+// This is the difference between two percentages, so the unit is percentage
+// points. The value 0.201 is shown as 20.1%, and it means 20.1 points.
 Overtime Gap = [Overtime Attrition Rate] - [No Overtime Attrition Rate]
 
+
+// =============================================================================
+//  5. FIRST TWO YEARS AND THE HIGH-RISK GROUP
+// =============================================================================
+
+// What is the attrition rate in the first two years at the company?
 First 2 Years Attrition Rate =
 CALCULATE ( [Attrition Rate], Employee[YearsAtCompany] <= 2 )
 
+// High-risk group = employees who work overtime AND have 0-2 years at the company.
+// When CALCULATE has more than one filter, all of them must be true.
+
+// How many employees are in this group?
 High-Risk Employees =
 CALCULATE (
     [Total Employees],
@@ -50,6 +129,7 @@ CALCULATE (
     Employee[YearsAtCompany] <= 2
 )
 
+// How many of them left?
 High-Risk Leavers =
 CALCULATE (
     [Employees Left],
@@ -57,27 +137,82 @@ CALCULATE (
     Employee[YearsAtCompany] <= 2
 )
 
+// What is the attrition rate in this group?
 High-Risk Attrition Rate = DIVIDE ( [High-Risk Leavers], [High-Risk Employees] )
 
+// What share of all employees who left come from this group?
+// If a slicer is selected (for example Department = Sales), both numbers are
+// calculated inside that selection.
 High-Risk Share of Leavers = DIVIDE ( [High-Risk Leavers], [Employees Left] )
 
+
+// =============================================================================
+//  6. PERFORMANCE REVIEWS (in the Performance table)
+// =============================================================================
+
+// Number of reviews. It is not the number of employees: one employee can have
+// several reviews, and 190 employees have no review.
 Reviews = COUNTROWS ( Performance )
 
+// Average ratings, calculated over all reviews. An employee with more reviews
+// has more weight. SQL and Excel use the same method.
 Avg Self Rating = AVERAGE ( Performance[SelfRating] )
 
 Avg Manager Rating = AVERAGE ( Performance[ManagerRating] )
 
+// A negative value means managers give lower ratings than employees give
+// themselves.
 Rating Gap = [Avg Manager Rating] - [Avg Self Rating]
 
+
+// =============================================================================
+//  7. DATA CHECK
+// =============================================================================
+
+// How many employees have no review?
+// FILTER looks at each employee. RELATEDTABLE returns that employee's reviews.
+// If the number of reviews is 0, the employee is counted.
 Employees Without Review =
 COUNTROWS (
     FILTER ( Employee, COUNTROWS ( RELATEDTABLE ( Performance ) ) = 0 )
 )
 
-// ---------- Expected values with no filters (use them to check) ----------
-// Total Employees = 1,470 | Employees Left = 237 | Attrition Rate = 16.1%
-// Overtime Attrition Rate = 30.5% | No Overtime Attrition Rate = 10.4%
-// First 2 Years Attrition Rate = 29.7%
-// High-Risk Employees = 154 | High-Risk Attrition Rate = 48.1% | High-Risk Share of Leavers = 31.2%
-// Reviews = 6,709 | Employees Without Review = 190
-// Avg Self Rating = 3.98 | Avg Manager Rating = 3.47
+
+// =============================================================================
+//  EXPECTED VALUES (WITH NO SLICER SELECTED)
+// =============================================================================
+//  Total Employees                 1,470
+//  Employees Left                  237
+//  Attrition Rate                  16.1%
+//  Median Salary                   71,200 (71,199.5 before rounding)
+//  Average Salary                  112,956
+//  Overtime Attrition Rate         30.5%
+//  No Overtime Attrition Rate      10.4%
+//  Overtime Gap                    20.1 percentage points
+//  First 2 Years Attrition Rate    29.7%
+//  High-Risk Employees             154
+//  High-Risk Leavers               74
+//  High-Risk Attrition Rate        48.1%
+//  High-Risk Share of Leavers      31.2%
+//  Reviews                         6,709
+//  Avg Self Rating                 3.98
+//  Avg Manager Rating              3.47
+//  Rating Gap                      -0.51
+//  Employees Without Review        190
+//
+//  Example with the slicer Department = Sales:
+//  Total Employees 446, Employees Left 92, Attrition Rate 20.6%.
+
+
+// =============================================================================
+//  LIMITS
+// =============================================================================
+//  - The measures show relationships, not causes. For example, attrition is
+//    higher with overtime, but this does not prove that overtime is the reason.
+//  - Some groups are small (for example the HR job roles), so their rates can
+//    change a lot with only a few employees. The job role chart shows only
+//    roles with 30 or more employees.
+//  - The data has no commission or sales target columns, so these measures
+//    cannot explain the high attrition of Sales Representatives.
+//  - 1,141 reviews have a date before the hire date of the employee. The rows
+//    are kept, and no measure here uses review dates.

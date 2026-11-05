@@ -1,9 +1,15 @@
 # HR Analytics Project: Employee Attrition & Performance
 
-> **Status:** in progress (SQL, Python, and Excel analysis done; Power BI dashboard next)
+> **Status:** version 1 complete (SQL, Python, Excel, and Power BI)
 
 ## Overview
 An end-to-end analysis of HR data for a company with 1,470 employees. The goal is to understand which factors are related to employee attrition (employees leaving the company) and how performance reviews and satisfaction scores look across departments and job roles.
+
+## Summary of results
+- **16.1%** of employees left (237 of 1,470). The rate is not the same for everyone: the highest rates are in Sales Representatives (39.8%), Data Scientists (23.8%), and employees in their first two years (29.7%).
+- **Overtime** is the factor with the clearest gap: 30.5% of employees with overtime left, compared with 10.4% without overtime. The gap appears in 8 of the 9 job roles with 30+ employees.
+- **High-risk segment:** employees with overtime and 0-2 years at the company are 10.5% of the company, but they account for 31% of all employees who left (48.1% attrition rate).
+- **Limits:** the results show relationships, not causes. There is no commission or target data, so the reason for the Sales Representative attrition cannot be confirmed with this dataset.
 
 ## Business questions
 1. What is the overall attrition rate, and how does it differ by department and job role?
@@ -27,7 +33,7 @@ Five CSV files (a practice dataset shared for skill-building; the original sourc
 - **Python** (pandas, matplotlib, seaborn) in Jupyter notebooks
 - **SQL** (SQLite): joins, CTEs, window functions
 - **Excel** (Power Query, formulas, PivotTables, slicer, PivotChart)
-- **Power BI** (dashboard): planned
+- **Power BI** (data model, DAX measures, 2-page dashboard)
 - **Git & GitHub**
 
 ## Project structure
@@ -46,7 +52,10 @@ hr-analytics-project/
 │   └── 02_advanced_queries.sql
 ├── excel/
 │   └── HR_Analysis.xlsx
-├── powerbi/        Power BI report and DAX measures (in progress)
+├── powerbi/
+│   ├── HR_Attrition_Dashboard.pbix
+│   ├── HR_Dashboard_Theme.json
+│   └── measures.dax
 └── images/         charts created by notebook 04
 ```
 
@@ -70,6 +79,18 @@ Names and ethnicity were removed from the Excel file because they are not needed
 
 ![Excel PivotTables](images/10_excel_pivots.png)
 
+## Power BI dashboard
+`powerbi/HR_Attrition_Dashboard.pbix` was built from the cleaned CSV files in `data/clean`.
+
+- **Data model:** `Employee` (1) to `Performance` (many) on `EmployeeID`, and `EducationLevel` (1) to `Employee` (many) on `Education`.
+- **DAX:** 2 calculated columns (`Age Group`, `Tenure Band`) and 18 measures (for example `Attrition Rate`, `Overtime Gap`, `High-Risk Attrition Rate`). They are saved in `powerbi/measures.dax`.
+- **Pages:** `Overview` (key numbers, attrition by department and job role, slicers) and `Drivers` (overtime, age, years at the company, the high-risk segment, and self rating vs manager rating).
+- **Theme:** `powerbi/HR_Dashboard_Theme.json` keeps the same colors as the Python charts.
+
+![Power BI overview page](images/13_powerbi_overview.png)
+
+![Power BI drivers page](images/14_powerbi_drivers.png)
+
 ## Progress
 - [x] Data cleaning (Python)
 - [x] SQLite database with primary and foreign keys
@@ -77,8 +98,8 @@ Names and ethnicity were removed from the Excel file because they are not needed
 - [x] Advanced SQL queries (HAVING, CTEs, window functions)
 - [x] Exploratory analysis and charts (Python)
 - [x] Excel workbook (Power Query, formulas, PivotTables, slicer, chart)
-- [ ] Power BI dashboard
-- [ ] Final insights and recommendations
+- [x] Power BI dashboard (data model, 18 DAX measures, 2 pages)
+- [x] Final insights and recommendations
 
 ## Data quality summary
 - No missing values and no duplicate rows were found.
@@ -88,7 +109,7 @@ Names and ethnicity were removed from the Excel file because they are not needed
 - Known data issue: 1,141 reviews (17%) for 289 employees are dated before the employee's hire date. These rows are kept and flagged; time-based analysis is done with this in mind.
 - Some salaries look unusual for their job role (for example, a Data Scientist at 455,643 when the role median is about 44,000). They are kept because they cannot be confirmed as errors.
 
-## Key findings (so far)
+## Key findings
 The overall attrition rate is **16.1%** (237 of 1,470 employees). These are relationships in the data, not proven causes.
 
 - **Job role:** Sales Representative has the highest attrition rate (39.8%), followed by Data Scientist (23.8%). Management roles are the lowest (Engineering Manager 2.7%, Manager 5.4%).
@@ -147,6 +168,7 @@ The overall attrition rate is **16.1%** (237 of 1,470 employees). These are rela
 | High-risk segment: attrition rate | 48.1% |
 | Sales Representative attrition rate | 39.8% |
 
-## Next steps
-- Power BI dashboard (overview page and attrition page).
-- Final insights and recommendations.
+## Possible next steps
+- Add commission and sales target data for Sales Representatives (if available) and test if low target achievement is linked to attrition.
+- Build a model that estimates attrition risk, and compare it with the simple segments used here.
+- Refresh the analysis with new data every quarter and track the KPIs above.

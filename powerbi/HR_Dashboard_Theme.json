@@ -1,0 +1,49 @@
+{
+  "name": "HR Attrition Theme",
+  "dataColors": ["#4C78A8", "#E45756", "#A0AEC0", "#F28E2B", "#5B7DB1", "#72B7B2", "#B279A2", "#9D755D"],
+  "background": "#FFFFFF",
+  "foreground": "#2D3748",
+  "tableAccent": "#4C78A8",
+  "good": "#4C78A8",
+  "neutral": "#F28E2B",
+  "bad": "#E45756",
+  "minimum": "#FFEDA0",
+  "center": "#FEB24C",
+  "maximum": "#BD0026",
+  "textClasses": {
+    "callout": { "fontSize": 30, "fontFace": "Segoe UI Semibold", "color": "#2D3748" },
+    "title": { "fontSize": 13, "fontFace": "Segoe UI Semibold", "color": "#2D3748" },
+    "header": { "fontSize": 12, "fontFace": "Segoe UI Semibold", "color": "#2D3748" },
+    "label": { "fontSize": 10, "fontFace": "Segoe UI", "color": "#2D3748" }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "*": [
+          { "wordWrap": true }
+        ],
+        "title": [
+          { "show": true, "fontColor": { "solid": { "color": "#2D3748" } }, "fontSize": 13, "fontFamily": "Segoe UI Semibold" }
+        ],
+        "legend": [
+          { "show": true, "position": "Bottom", "showTitle": false, "fontSize": 10 }
+        ],
+        "categoryAxis": [
+          { "gridlineShow": false, "fontSize": 10 }
+        ],
+        "valueAxis": [
+          { "gridlineShow": true, "gridlineColor": { "solid": { "color": "#E2E8F0" } }, "fontSize": 10 }
+        ],
+        "labels": [
+          { "show": true, "fontSize": 10 }
+        ],
+        "background": [
+          { "show": true, "color": { "solid": { "color": "#FFFFFF" } }, "transparency": 0 }
+        ],
+        "border": [
+          { "show": true, "color": { "solid": { "color": "#E2E8F0" } }, "radius": 6 }
+        ]
+      }
+    }
+  }
+}
